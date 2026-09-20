@@ -1,9 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "codeclarity",
-  "description": "Improve code comments, names, docstrings, and pull-request descriptions.",
+  "description": "Improve code comments, names, docstrings, commit messages, and pull-request descriptions.",
   "version": "0.1.0",
   "license": "MIT",
-  "keywords": ["code", "comments", "docstrings", "names", "readability"],
-  "skills": ["./"]
+  "keywords": [
+    "code",
+    "comments",
+    "docstrings",
+    "names",
+    "commits",
+    "readability"
+  ],
+  "skills": [
+    "./"
+  ]
 }

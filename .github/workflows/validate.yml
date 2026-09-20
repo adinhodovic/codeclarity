@@ -1,0 +1,75 @@
+name: Check package
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: "1.23"
+
+      - name: Check skill discovery
+        run: npx --yes skills@1.5.20 add . --list
+
+      - name: Check Claude plugin manifest
+        run: |
+          npm install --global @anthropic-ai/claude-code@2.1.237
+          claude plugin validate .
+
+      - name: Check required frontmatter and tool-neutral scope
+        run: |
+          frontmatter=$(sed -n '/^---$/,/^---$/p' SKILL.md | sed '1d;$d')
+          for field in name description license; do
+            echo "$frontmatter" | grep -q "^$field:" || {
+              echo "Add required YAML field to SKILL.md: $field"; exit 1; }
+          done
+          echo "$frontmatter" | grep -qE '^(compatibility|allowed-tools):' && {
+            echo "Keep compatibility: and allowed-tools: out of this tool-neutral skill"; exit 1; }
+          echo "OK"
+
+      - name: Check version is synced across SKILL.md and plugin.json
+        run: |
+          skill_version=$(grep -oP '^\s+version:\s*"\K[0-9]+\.[0-9]+\.[0-9]+' SKILL.md | head -1)
+          plugin_version=$(grep -oP '"version":\s*"\K[0-9]+\.[0-9]+\.[0-9]+' .claude-plugin/plugin.json | head -1)
+          echo "SKILL.md=$skill_version plugin.json=$plugin_version"
+          if [ -z "$skill_version" ] || [ "$skill_version" != "$plugin_version" ]; then
+            echo "Use one package version in SKILL.md and plugin.json"; exit 1
+          fi
+
+      - name: Check reference integrity and behavior
+        run: python3 -m unittest discover -s tests -v
+
+      - name: "Run skill-validator (fail on real errors and on SKILL.md size regressions)"
+        run: |
+          go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@latest
+          set +e
+          output=$("$(go env GOPATH)/bin/skill-validator" check . 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          if [ "$code" -eq 1 ] || [ "$code" -ge 3 ]; then
+            exit "$code"
+          fi
+          if echo "$output" | grep -qE 'SKILL\.md body is [0-9]+ tokens \(spec recommends'; then
+            echo "SKILL.md is over the token budget; move detail into references/ instead of growing it"
+            exit 1
+          fi
+          if echo "$output" | grep -qE 'SKILL\.md body is [0-9]+ lines \(spec recommends'; then
+            echo "SKILL.md is over the line budget; move detail into references/ instead of growing it"
+            exit 1
+          fi
