@@ -23,6 +23,18 @@ def prepare_records(records):
 """What unresolved behavior does this TODO refer to?"""
 
 
+# --- Generic guidelines and gotchas: Apply editorial defaults ---
+
+
+def _copy_labels(labels):
+    return labels.copy()
+
+
+def copy_labels(labels):
+    """Return a shallow copy of labels."""
+    return _copy_labels(labels)
+
+
 # --- Generic guidelines and gotchas: When not to act ---
 
 
@@ -117,6 +129,23 @@ class RecordExport:
 
     def export_status(self, record):
         return record.status
+
+
+# --- Comments: Don't cite a named sibling as unverified evidence ---
+
+
+def export_org_unit(report):
+    # Preserve the org unit at creation so transfers do not rewrite history (MIG-42).
+    return report.org_unit_snapshot
+
+
+def encode_token(payload):
+    # Use hex for text-only transport; decode_token reads this wire format.
+    return payload.hex()
+
+
+def decode_token(token):
+    return bytes.fromhex(token)
 
 
 # --- Comments: Shared conventions ---

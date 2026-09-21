@@ -16,6 +16,28 @@ def prepare_records(records):
     return records
 
 
+# --- Generic guidelines and gotchas: Apply editorial defaults ---
+# Request: improve these comments and docstrings; preserve executable code.
+# Nearby functions repeat their names in docstrings and narrate each operation.
+# The project has no requirement to keep that style or to document private helpers.
+# Explicit project requirement: public functions must have a docstring.
+
+
+def _copy_labels(labels):
+    """Copy labels."""
+    # Return a copy of the labels.
+    return labels.copy()
+
+
+def copy_labels(labels):
+    """Copy labels.
+
+    This helpful utility efficiently makes a shallow copy of the supplied labels.
+    """
+    # Call the private copy helper and return the result.
+    return _copy_labels(labels)
+
+
 # --- Generic guidelines and gotchas: When not to act ---
 # Supplied glossary: Handler is the project's name for a registered event consumer.
 # Request: review the name and docstring; preserve the public contract.
@@ -121,6 +143,30 @@ class RecordExport:
     def export_status(self, record):
         # Export the stored status because translated labels depend on the viewer's locale.
         return record.status
+
+
+# --- Comments: Don't cite a named sibling as unverified evidence ---
+# Supplied migration ticket MIG-42: report exports must preserve the org unit captured
+# at creation so later transfers do not change historical reports. ReportHeader's
+# implementation was not supplied; its behavior has not been verified.
+
+
+def export_org_unit(report):
+    # Unlike ReportHeader's own org_unit, this uses the snapshot.
+    return report.org_unit_snapshot
+
+
+# Supplied protocol contract: tokens use hex text to survive text-only transport.
+# Keep the useful reference to the decoder; both implementations are available below.
+
+
+def encode_token(payload):
+    # Use hex for text-only transport; decode_token reads this wire format.
+    return payload.hex()
+
+
+def decode_token(token):
+    return bytes.fromhex(token)
 
 
 # --- Comments: Shared conventions ---

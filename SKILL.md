@@ -60,17 +60,23 @@ Retain a vague TODO and ask what it tracks when deleting it would lose an unreso
 concern. Put planned behavior in an issue or actionable TODO, clearly distinguished from
 the current contract.
 
-### Match existing style
+### Apply editorial defaults
 
-Read nearby comments, docstrings, or names before rewriting. Follow established project
-conventions, including required docstrings, test naming, commit formats, and PR templates.
-Override them only when requested. Style conventions do not justify false claims.
+Apply this skill's editorial defaults to the requested surfaces. Read nearby text for
+context and terminology, not permission to repeat its weaknesses. Existing wording and
+recurring habits are not requirements to preserve their style.
+
+Honor explicit project requirements for docstrings, naming, commit formats, and PR
+templates. Within those requirements, remove redundant prose and state concrete meaning.
+Otherwise, use this skill's defaults even when surrounding text follows a weaker pattern.
+Do not ask permission for routine editorial choices within scope. No style requirement
+justifies a false claim.
 
 ### When not to act
 
-A flagged pattern is a candidate, not a verdict. Rewrite when it improves accuracy or
-readability in the requested context; one occurrence can be enough. Leave already-clear
-text alone rather than changing it to demonstrate activity.
+Leave text alone when it already states a supported contract, reason, or constraint
+without redundant narration. Do not rewrite it merely to substitute synonyms. Remove
+redundancy even when it occurs only once or matches the surrounding style.
 
 Preserve defined domain terms even if they sound generic, and long docstrings that
 document a genuinely large surface. Text inside quotations, log messages, and test fixture
@@ -85,10 +91,11 @@ Edit surrounding prose without breaking their syntax, placement, or scope.
 
 ### Patterns to remove
 
-Watch for syntax narration, vague verbs, decorative warnings, inflated wording, and
-claims about quality without observable meaning. Recent-refactor narration belongs in
-history, not permanent comments. These are signals, not banned words: retain wording
-when it is the clearest expression of the domain or required by project conventions.
+Delete syntax narration, empty praise, and decorative warnings. Replace vague verbs and
+inflated claims with supported behavior; delete them when they add no information.
+Remove recent-refactor narration from permanent comments. State the local constraint
+instead of an unsupported comparison with related code. Preserve any real warning, qualification,
+or domain term carried by the wording being removed.
 
 ### Code review comments
 
@@ -109,6 +116,8 @@ documentation from stylistic preferences. If no change is warranted, say so brie
 
 - Every factual claim is supported, including verification and reasons for changes.
 - Comments add intent or a non-obvious constraint rather than narrating syntax.
+- Cross-references support a locally stated constraint; claims about related code
+  have been verified.
 - Names are specific without being verbose and preserve domain vocabulary.
 - The diff stays in scope and preserves behavior, contracts, and functional comments.
 - Renames update references and documentation without leaving stale names.
@@ -126,7 +135,8 @@ second copy of knowledge that can drift out of sync.
 
 #### What a useful comment contains
 
-Prefer comments that answer one of these questions:
+Keep a non-required comment only if it supplies information beyond the visible code,
+answering a question such as:
 
 - Why is this branch, order, workaround, or limit required?
 - What side effect or invariant must a future change preserve?
@@ -147,7 +157,7 @@ invent missing details to make a TODO look complete.
 #### Do not explain obvious configuration
 
 Framework declarations, class names, option values, and straightforward assignments
-already explain themselves. Do not add a comment that paraphrases visible configuration.
+already explain themselves. Remove comments that only paraphrase visible configuration.
 Keep a comment when it records a non-obvious constraint or explains why a default or
 alternative would be unsafe.
 
@@ -160,6 +170,13 @@ document only what they add, override, or do differently.
 
 When a workaround repeats, explain its shared reason once at the common abstraction or
 enclosing scope where readers will find it. Keep local comments only for differences.
+
+#### Don't cite a named sibling as unverified evidence
+
+State the local constraint first. Keep a cross-reference only when it supplies supporting
+evidence, explains a necessary relationship, or identifies code that must change together.
+Verify claims about related code; a reference alone does not keep them accurate. When the
+rationale comes from a shared rule, document, or tracked migration, cite that source.
 
 #### Shared conventions
 
@@ -200,12 +217,13 @@ to learn required inputs, outputs, or failure behavior.
 
 #### Do not restate the entry point
 
-Use the docstring for behavior the name cannot express: ambiguity handling, idempotency,
-side effects, or failure behavior. An obvious summary is not a substitute for a contract.
+Lead with behavior the name cannot express: ambiguity handling, idempotency, side effects,
+or failure behavior. Remove opening sentences that merely expand the function name. If
+no non-obvious contract remains, remove the docstring unless explicitly required.
 
 #### Summarize complex behavior as a list
 
-For several distinct rules, prefer a short list of inputs, precedence, fallbacks, side
+For several distinct rules, use a short list of inputs, precedence, fallbacks, side
 effects, or edge cases over a dense paragraph. Order the list when precedence matters;
 use bullets for independent constraints. Do not list every implementation step.
 
@@ -213,9 +231,9 @@ use bullets for independent constraints. Do not list every implementation step.
 
 Use the smallest form that communicates the contract: no comment for obvious code, one
 line for a simple purpose, or a longer block for inputs, outputs, errors, and constraints.
-Omit empty sections and boilerplate. A mandatory docstring with nothing to say invites
-stale documentation; still follow an established project requirement unless asked to
-change it. Length alone is not a reason to delete useful details.
+Remove empty sections and boilerplate. If a docstring is explicitly required but the
+name already communicates the behavior, use the shortest accurate summary that satisfies
+the requirement. Length alone is not a reason to delete useful details.
 
 #### Examples when clearer than prose
 
@@ -227,10 +245,9 @@ self-contained snippet.
 
 #### Let test names carry the scenario
 
-Test names should state behavior and important conditions. Comments should explain a
-non-obvious regression or constraint, not repeat fixture setup and assertions. Module
-and class docstrings are useful only when they add context the names and tests do not
-already provide, subject to project conventions.
+Test names should state behavior and important conditions. Remove comments that repeat
+fixture setup or assertions; keep those explaining a non-obvious regression or constraint.
+Remove non-required module and class docstrings that add nothing beyond the test names.
 
 ## Method and function names
 
@@ -240,10 +257,11 @@ Choose names that convey the action, result, unit or boundary, or boolean questi
 
 ### Avoid generic names
 
-Use a more specific name when the evidence supports it. Preserve domain terms rather
-than replacing them with supposedly clearer synonyms. Do not add redundant type words
-to names that already have strong context, or infer a business meaning from arithmetic.
-If the domain itself is unclear, ask.
+Within an authorized naming edit, replace vague names with the specific behavior or
+role supported by the evidence. Preserve domain terms rather than replacing them with
+supposedly clearer synonyms. Do not add redundant type words to names that already have
+strong context, or infer a business meaning from arithmetic. If the domain itself is
+unclear, ask.
 
 ### Rename safely
 
@@ -256,10 +274,11 @@ the diff for references it may miss. Verify changed call sites and relevant beha
 
 ### Write the summary for a reader scanning history
 
-Write a short, standalone imperative summary naming the change. Check whether it
-completes "If applied, this commit will ___." Without a project convention, aim for
-about 50 characters, capitalize, and omit a trailing period. Separate a body with a
-blank line. Follow existing tense, mood, and formats such as Conventional Commits.
+Write a short, standalone imperative summary naming the concrete change. Aim for about
+50 characters, capitalize, and omit a trailing period. Separate a body with a blank line.
+Use explicitly required formats such as Conventional Commits; adapt these defaults only
+where the requirement conflicts. Do not copy vague subjects or inconsistent tense from
+recent history.
 
 ### Explain the rationale
 
@@ -288,9 +307,9 @@ the project's breaking-change format so readers and release tools can identify i
 
 ### Describe the change
 
-Make the purpose clear and explain the problem and approach using concrete nouns and
-observable behavior. Do not assume readers know the history. Use a paragraph or list
-according to the material; avoid file-by-file changelogs and unsupported claims of
+Lead with the problem and explain the approach using concrete nouns and observable
+behavior. Do not assume readers know the history. Use a paragraph for a single change
+and bullets for distinct outcomes. Remove file-by-file changelogs and unsupported claims of
 performance, security, compatibility, or quality.
 
 For draft or exploratory PRs, state readiness and the kind of feedback wanted when known;
@@ -309,10 +328,10 @@ meaningful check.
 
 ### Keep PR descriptions narrow
 
-Keep relevant scope, supported counts, exceptions, and outcomes. Leave review history,
-implementation chronology, and detailed test logs in the diff or issue. Preserve the
-author's structure unless an optional section is empty or important information needs a
-section.
+Keep relevant scope, supported counts, exceptions, and outcomes. Remove review history,
+implementation chronology, and detailed test logs from the description. Organize the
+remaining material around the problem, approach, and verification. Retain the author's
+structure when it already serves that order, and honor required template sections.
 
 ### Call out breaking changes and follow-ups
 
