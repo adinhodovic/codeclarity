@@ -196,6 +196,31 @@ def apply_override(scope):
     return scope.override or scope.default
 
 
+# --- Docstrings: Lead with the result ---
+
+
+def write_order(order, savepoint):
+    """Write the payment, then the order, then its line items, in one savepoint.
+    A database error rolls back all three and propagates to the caller.
+    """
+    with savepoint():
+        order.save_payment()
+        order.save_order()
+        order.save_line_items()
+
+
+# --- Docstrings: Document parameters the name does not explain ---
+
+
+def email_conflict(signup, account_id, owners):
+    """The id of another account that already uses `signup.email`, or None when
+    the email is free or belongs to `account_id`. `owners` maps each email to the
+    id of the account using it, after the batch's earlier signups are applied.
+    """
+    owner = owners.get(signup.email)
+    return owner if owner is not None and owner != account_id else None
+
+
 # --- Docstrings: Do not restate the entry point ---
 
 
@@ -256,6 +281,17 @@ def test_zero_limit_leaves_input_unchanged():
 
 def select_active_items(items):
     return [item for item in items if item.active]
+
+
+# --- Names: Avoid relative and implementation words ---
+
+
+def _ordered_product_ids(order, product_ids_by_sku):
+    return {product_ids_by_sku[sku] for sku in order.skus if sku in product_ids_by_sku}
+
+
+def _ships_in_house(product_ids, stock_by_product_id):
+    return any(stock_by_product_id.get(product_id, 0) > 0 for product_id in product_ids)
 
 
 # --- Names: Avoid generic names ---

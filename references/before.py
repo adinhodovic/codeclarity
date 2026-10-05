@@ -216,6 +216,29 @@ def apply_override(scope):
     return scope.override or scope.default
 
 
+# --- Docstrings: Lead with the result ---
+# Request: improve this docstring. Context: callers catch IntegrityError per order.
+
+
+def write_order(order, savepoint):
+    """Apply order: handles the payment, the order, and the line items."""
+    with savepoint():
+        order.save_payment()
+        order.save_order()
+        order.save_line_items()
+
+
+# --- Docstrings: Document parameters the name does not explain ---
+# Context: owners maps each email to the id of the account using it, kept up to
+# date as earlier signups in the same batch change accounts' emails.
+
+
+def email_conflict(signup, account_id, owners):
+    """Conflict for signup, or None."""
+    owner = owners.get(signup.email)
+    return owner if owner is not None and owner != account_id else None
+
+
 # --- Docstrings: Do not restate the entry point ---
 
 
@@ -281,6 +304,19 @@ def test_it():
 
 def process(data):
     return [x for x in data if x.active]
+
+
+# --- Names: Avoid relative and implementation words ---
+# Request: rename these private helpers and their locals.
+# Context: the domain enum calls stock shipped from the store's warehouse IN_HOUSE.
+
+
+def _wanted_items(order, lookups):
+    return {lookups[sku] for sku in order.skus if sku in lookups}
+
+
+def _ships_own(items, stock):
+    return any(stock.get(item, 0) > 0 for item in items)
 
 
 # --- Names: Avoid generic names ---

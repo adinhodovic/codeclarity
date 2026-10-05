@@ -54,6 +54,7 @@ class ExampleTests(unittest.TestCase):
             "Tests: Let test names carry the scenario",
             "Names: Name the behavior",
             "Names: Rename safely",
+            "Names: Avoid relative and implementation words",
         }
         for header, before in self.examples["before"].items():
             if header in authorized_code_changes:
