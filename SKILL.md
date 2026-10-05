@@ -9,7 +9,7 @@ license: MIT
 metadata:
   audience: software developers
   scope: code communication
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Code Clarity
@@ -36,10 +36,13 @@ Fix first whatever misleads or slows down a reader:
 ### Stay within scope
 
 Edit only the requested surfaces. Do not rewrite executable logic, formatting, test
-behavior, or configuration unless asked. Rename identifiers only when asked; a request
-to clarify local names does not authorize changing a public API. In a comments-only edit,
-suggest extractions or structural refactors; do not perform them. Report significant
-misleading documentation outside the scope; do not silently fix it.
+behavior, or configuration unless asked. In a comments-only edit, suggest extractions or
+structural refactors; do not perform them. Report significant misleading documentation
+outside the scope; do not silently fix it.
+
+A request to make code clearer or more readable authorizes renaming private and local
+identifiers; public APIs and serialized keys still need an explicit ask. When you cannot
+rename, still report each failing name with a proposed one.
 
 ### Working method
 
@@ -60,6 +63,12 @@ deleting a vague TODO would lose an unresolved concern, keep it and ask what it 
 Put planned behavior in an issue or actionable TODO, clearly separate from the current
 contract.
 
+### Audit every item
+
+Check every in-scope docstring, comment, and name against every applicable rule. Do not
+sample or stop after the worst few. Fix each failure, or report it with the reason you
+did not. "Already clear" is a verdict an item earns, not a default.
+
 ### Apply editorial defaults
 
 Apply this skill's editorial defaults to the requested surfaces. Read nearby text for
@@ -74,9 +83,9 @@ justifies a false claim.
 
 ### When not to act
 
-Leave clear text alone: text that already states a supported contract, reason, or
-constraint without redundant narration. Do not rewrite it to swap in synonyms. Remove
-redundancy even when it occurs only once or matches the surrounding style.
+Leave text alone only when it passes the final check. Do not rewrite passing text to
+swap in synonyms. Remove redundancy even when it occurs only once or matches the
+surrounding style.
 
 Preserve defined domain terms even when they sound generic. Preserve long docstrings that
 document a genuinely large surface. Do not silently rewrite text inside quotations, log
@@ -101,24 +110,31 @@ domain term carried by the wording you remove.
 
 Comment on the code, never the person. Follow the project's feedback labels; absent a
 convention, use `Nit:` for minor non-blocking details and `Optional:` or `Consider:` for
-suggestions. State required changes and their reasons explicitly. When a review explanation
-contains information future maintainers need, ask for it in the code or its
-documentation, not only in the review tool. Edit only within scope.
+suggestions no rule covers; a rule violation is a required change. State required changes
+and their reasons explicitly. When a review explanation contains information future
+maintainers need, ask for it in the code or its documentation, not only in the review
+tool. Edit only within scope.
 
 ### What to return
 
 For pasted code or prose, return the revision and a brief note of meaningful changes.
 For a named file, edit within scope and report what changed. For a review, lead with
 actionable findings, give file/line references when available, and separate misleading
-documentation from stylistic preferences. When no change is warranted, say so briefly.
+documentation from stylistic preferences. List every item that still fails, with the
+proposed fix and why it was not applied. Say "no change warranted" only after the audit.
 
 ### Final check
+
+Do not report the task done while an item fails a check, unless you report it as an
+unapplied suggestion.
 
 - Every factual claim is supported, including verification and reasons for changes.
 - Comments add intent or a non-obvious constraint rather than narrating syntax.
 - Cross-references support a locally stated constraint; claims about related code
   have been verified.
 - Names are specific without being verbose and preserve domain vocabulary.
+- Function names say what they return or do; predicates read as questions.
+- Docstrings open with the result or effect, say whether they write, and stand alone.
 - The diff stays in scope and preserves behavior, contracts, and functional comments.
 - Renames update references and documentation without leaving stale names.
 - The result sounds like a developer explaining this code to another developer.
@@ -215,6 +231,20 @@ Explain the core contract where the reader uses it. Link specifications, design
 decisions, or upstream issues as support, but never make readers follow a link to learn
 required inputs, outputs, or failure behavior.
 
+Never defer a rule or its order to another function's docstring ("see `X`"); state the
+rules that apply here.
+
+#### Lead with the result
+
+Open with what the function returns (a noun phrase) or does (an imperative verb), not
+"Helper for", "Handles", or "Apply". Say whether it writes, mutates arguments, or lets
+exceptions propagate, and what a sentinel such as `None` means.
+
+#### Document parameters the name does not explain
+
+When a parameter's name and type leave its meaning open, state it in one clause: for a
+mapping, its key and value; for a collection, what qualifies membership.
+
 #### Do not restate the entry point
 
 Lead with behavior the name cannot express: ambiguity handling, idempotency, side effects,
@@ -253,7 +283,25 @@ Remove non-required module and class docstrings that add nothing beyond the test
 
 ### Name the behavior
 
-Name the action, result, unit or boundary, or boolean question.
+Name the action, result, unit or boundary, or boolean question:
+
+- A value: the value (`shipping_quote_for`) or `verb_object` (`pick_primary_address`),
+  not a noun pair that hides the result (`rule_match`).
+- A predicate: a question with a subject (`other_account_has_email`), not a bare
+  participle (`email_used_by_another`).
+- An effect: `verb_object` (`create_refund`).
+- A mapping: its key and value (`prices_by_sku`).
+- A collection: what qualifies membership (`account_ids_with_open_orders`), not how it
+  was built (`mapped_ids`).
+
+If a docstring must explain what a name means, rename it or suggest a name.
+
+### Avoid relative and implementation words
+
+Do not name a value relative to unstated code or by its implementation (`wanted`, `new`,
+`own`, `scalar`, `mapped`, `data`, `helper`). Name the state it represents
+(`tags_after_import`), with the domain's term when one exists (`ships_in_house` for
+`IN_HOUSE`).
 
 ### Avoid generic names
 
