@@ -55,6 +55,8 @@ class ExampleTests(unittest.TestCase):
             "Names: Name the behavior",
             "Names: Rename safely",
             "Names: Avoid relative and implementation words",
+            "Names: Name a limit by what it bounds",
+            "Names: Keep one name for one value",
         }
         for header, before in self.examples["before"].items():
             if header in authorized_code_changes:
@@ -115,6 +117,18 @@ class ExampleTests(unittest.TestCase):
                 self.assertEqual(namespace["UserPayload"](42).to_wire(), {"user_id": 42})
         self.namespaces["before"]["test_it"]()
         self.namespaces["after"]["test_zero_limit_leaves_input_unchanged"]()
+
+    def test_renamed_limits_and_parameters_keep_results(self):
+        photos = [SimpleNamespace(pixels=index) for index in range(7)]
+        reviews = [SimpleNamespace(product_id="a")]
+        products = [SimpleNamespace(product_id=code) for code in ("a", "b")]
+        for name, namespace in self.namespaces.items():
+            with self.subTest(version=name):
+                self.assertEqual(namespace["album_thumbnails"](photos), [0, 1, 2, 3, 4])
+                self.assertEqual(namespace["_recommend"](products, reviews), products[1:])
+                count = namespace["capped_comment_count"]
+                self.assertEqual(count(list(range(10))), (10, False))
+                self.assertEqual(count(list(range(11))), (10, True))
 
     def test_fallback_contracts_include_falsy_values(self):
         for name, namespace in self.namespaces.items():

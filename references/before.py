@@ -85,6 +85,18 @@ def replay_order(events):
     return sorted(events, key=lambda event: (event.sequence, event.id))
 
 
+# --- Comments: State boundaries exactly ---
+# Supplied context: the feed shows "10+" for a count that stopped at the cap.
+
+COMMENT_COUNT_CAP = 10
+
+
+def capped_comment_count(comment_ids):
+    # One more than the cap, so a post at the cap reads as capped.
+    counted = len(comment_ids[: COMMENT_COUNT_CAP + 1])
+    return min(counted, COMMENT_COUNT_CAP), counted > COMMENT_COUNT_CAP
+
+
 # --- Comments: What to remove ---
 
 
@@ -108,6 +120,19 @@ class CatalogEndpoint:
     # Set the pagination class to None to disable pagination.
     # The catalog consumer cannot follow pagination links.
     pagination_class = None
+
+
+# --- Comments: Explain an option by what it prevents ---
+# Supplied context: with robust=True, on_commit logs a failing callback and still runs
+# the ones registered after it; without it, the rest are skipped. A nightly job
+# sends every receipt that wasn't sent.
+
+
+def queue_receipt(on_commit, publish, order_id):
+    # Robust, so a broker error is logged instead of skipping the commit hooks
+    # registered after it. A publish lost that way isn't retried here (a retry
+    # finds the order already placed); the order stays in the nightly backlog.
+    on_commit(lambda: publish(order_id), robust=True)
 
 
 # --- Comments: Document inherited behavior at the parent ---
@@ -317,6 +342,32 @@ def _wanted_items(order, lookups):
 
 def _ships_own(items, stock):
     return any(stock.get(item, 0) > 0 for item in items)
+
+
+# --- Names: Name a limit by what it bounds ---
+# Request: rename this module's constants.
+# Context: an album's thumbnails are built from its first photos, and each new photo
+# up to that many rebuilds them.
+
+FIRST_PHOTOS = 5
+
+
+def album_thumbnails(photos):
+    return [photo.pixels for photo in photos[:FIRST_PHOTOS]]
+
+
+# --- Names: Keep one name for one value ---
+# Request: rename these private helpers' parameters and locals.
+# Context: the set holds the ids of products the shopper already reviewed.
+
+
+def _unreviewed(products, reviewed):
+    return [p for p in products if p.product_id not in reviewed]
+
+
+def _recommend(products, reviews):
+    done = {review.product_id for review in reviews}
+    return _unreviewed(products, done)
 
 
 # --- Names: Avoid generic names ---
