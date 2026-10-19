@@ -69,6 +69,10 @@ Check every in-scope docstring, comment, and name against every applicable rule.
 sample or stop after the worst few. Fix each failure, or report it with the reason you
 did not. "Already clear" is a verdict an item earns, not a default.
 
+Audit names the way you audit docstrings: list every identifier the change introduces
+or renames, constants and parameters included, each with a verdict and a one-line
+reason. An accurate name can still fail.
+
 ### Apply editorial defaults
 
 Apply this skill's editorial defaults to the requested surfaces. Read nearby text for
@@ -147,7 +151,8 @@ unapplied suggestion.
 
 Write comments that preserve information the code does not make obvious. State the
 constraint or consequence directly. Do not repeat a visible operation; the second copy
-drifts out of sync.
+drifts out of sync. A comment that needs a second read fails even when it is accurate:
+split the reason from the consequence.
 
 #### State boundaries exactly
 
@@ -310,7 +315,9 @@ Name the action, result, unit or boundary, or boolean question:
 - A collection: what qualifies membership (`account_ids_with_open_orders`), not how it
   was built (`mapped_ids`).
 
-If a docstring must explain what a name means, rename it or suggest a name.
+If a docstring must explain what a name means, rename it or suggest a name. A name
+fails when a reviewer has to read its use or a comment to learn what it holds or
+bounds, even if every word in it is true.
 
 ### Avoid relative and implementation words
 
