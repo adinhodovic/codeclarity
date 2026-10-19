@@ -9,7 +9,7 @@ license: MIT
 metadata:
   audience: software developers
   scope: code communication
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Code Clarity
@@ -68,6 +68,10 @@ contract.
 Check every in-scope docstring, comment, and name against every applicable rule. Do not
 sample or stop after the worst few. Fix each failure, or report it with the reason you
 did not. "Already clear" is a verdict an item earns, not a default.
+
+Audit names the way you audit docstrings: list every identifier the change introduces
+or renames, constants and parameters included, each with a verdict and a one-line
+reason. An accurate name can still fail.
 
 ### Apply editorial defaults
 
@@ -147,7 +151,14 @@ unapplied suggestion.
 
 Write comments that preserve information the code does not make obvious. State the
 constraint or consequence directly. Do not repeat a visible operation; the second copy
-drifts out of sync.
+drifts out of sync. A comment that needs a second read fails even when it is accurate:
+split the reason from the consequence.
+
+#### State boundaries exactly
+
+Describe a limit, threshold, or range exactly as the code compares it: "more than the
+cap" for `>`, "at least" for `>=`, "up to" for an exclusive slice. Check the operator
+and any off-by-one slice before writing the words.
 
 #### What a useful comment contains
 
@@ -164,7 +175,8 @@ answering a question such as:
 
 Remove empty praise, commented-out obsolete code, person/date attributions that belong
 in version control, and end-of-block markers already clear from syntax or indentation.
-Do not restructure the code just to eliminate a comment.
+Do not restructure the code just to eliminate a comment. When you change code under a
+comment, rewrite that comment; do not stack a new one above a stale one.
 
 Make every new TODO name an actionable next step or link to tracked work. Include a real
 owner or condition when it is known and useful, following the project's convention. Do
@@ -176,6 +188,13 @@ Framework declarations, class names, option values, and straightforward assignme
 explain themselves. Remove comments that only paraphrase visible configuration. Keep a
 comment that records a non-obvious constraint or explains why a default or alternative
 would be unsafe.
+
+#### Explain an option by what it prevents
+
+When an option's value is not obvious (`robust=True`, `atomic = False`,
+`db_constraint=False`), say what goes wrong without it, in plain words, then any edge
+case it leaves. Do not chain the mechanism, the failure, and the fallback into one
+dense sentence.
 
 #### Document inherited behavior at the parent
 
@@ -193,6 +212,8 @@ State the local constraint first. Keep a cross-reference only when it supplies s
 evidence, explains a necessary relationship, or identifies code that must change together.
 Verify claims about related code; a reference alone does not keep them accurate. When the
 rationale comes from a shared rule, document, or tracked migration, cite that source.
+Do not describe another layer's behavior from code that cannot see it, such as a UI's
+affordance in a backend comment; state what this layer provides.
 
 #### Shared conventions
 
@@ -294,7 +315,9 @@ Name the action, result, unit or boundary, or boolean question:
 - A collection: what qualifies membership (`account_ids_with_open_orders`), not how it
   was built (`mapped_ids`).
 
-If a docstring must explain what a name means, rename it or suggest a name.
+If a docstring must explain what a name means, rename it or suggest a name. A name
+fails when a reviewer has to read its use or a comment to learn what it holds or
+bounds, even if every word in it is true.
 
 ### Avoid relative and implementation words
 
@@ -303,13 +326,26 @@ Do not name a value relative to unstated code or by its implementation (`wanted`
 (`tags_after_import`), with the domain's term when one exists (`ships_in_house` for
 `IN_HOUSE`).
 
+### Name a limit by what it bounds
+
+Name a constant that caps or counts something by what it limits and what for
+(`THUMBNAIL_PHOTOS`), not by a position or size alone (`FIRST_PHOTOS`, `MAX_ITEMS`).
+
+### Keep one name for one value
+
+A value passed between functions keeps one name in every signature and local that
+holds it. Name a collection of identifiers for whose they are
+(`reviewed_product_ids`), not only for how they qualify (`reviewed`).
+
 ### Avoid generic names
 
 Within an authorized naming edit, replace vague names with the specific behavior or
 role the evidence supports. Keep domain terms; do not replace them with supposedly
-clearer synonyms. Do not add redundant type words to names that already have strong
-context, and do not infer a business meaning from arithmetic. When the domain itself is
-unclear, ask.
+clearer synonyms. When a class name is more generic than the domain term that tells it
+apart (an `Account` that is always a merchant's), name its values by the domain term
+(`merchant_account`). Do not add redundant type words to names that already have
+strong context, and do not infer a business meaning from arithmetic. When the domain
+itself is unclear, ask.
 
 ### Rename safely
 

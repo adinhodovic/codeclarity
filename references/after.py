@@ -78,6 +78,19 @@ def replay_order(events):
     return sorted(events, key=lambda event: (event.sequence, event.id))
 
 
+# --- Comments: State boundaries exactly ---
+# Supplied context: the feed shows "10+" for a count that stopped at the cap.
+
+COMMENT_COUNT_CAP = 10
+
+
+def capped_comment_count(comment_ids):
+    # One more than the cap, so a post with more comments than the cap reads as
+    # capped and one with exactly the cap doesn't.
+    counted = len(comment_ids[: COMMENT_COUNT_CAP + 1])
+    return min(counted, COMMENT_COUNT_CAP), counted > COMMENT_COUNT_CAP
+
+
 # --- Comments: What to remove ---
 
 
@@ -95,6 +108,19 @@ def select_active_records(records):
 class CatalogEndpoint:
     # The catalog consumer cannot follow pagination links.
     pagination_class = None
+
+
+# --- Comments: Explain an option by what it prevents ---
+# Supplied context: with robust=True, on_commit logs a failing callback and still runs
+# the ones registered after it; without it, the rest are skipped. A nightly job
+# sends every receipt that wasn't sent.
+
+
+def queue_receipt(on_commit, publish, order_id):
+    # robust=True: if publishing fails, the error is logged and the commit hooks
+    # registered after this one still run. Without it, they would be skipped.
+    # Nothing republishes it; the nightly job sends the receipt instead.
+    on_commit(lambda: publish(order_id), robust=True)
 
 
 # --- Comments: Document inherited behavior at the parent ---
@@ -292,6 +318,33 @@ def _ordered_product_ids(order, product_ids_by_sku):
 
 def _ships_in_house(product_ids, stock_by_product_id):
     return any(stock_by_product_id.get(product_id, 0) > 0 for product_id in product_ids)
+
+
+# --- Names: Name a limit by what it bounds ---
+# Request: rename this module's constants.
+# Context: an album's thumbnails are built from its first photos, and each new photo
+# up to that many rebuilds them.
+
+# How many of an album's first photos its thumbnails are built from.
+THUMBNAIL_PHOTOS = 5
+
+
+def album_thumbnails(photos):
+    return [photo.pixels for photo in photos[:THUMBNAIL_PHOTOS]]
+
+
+# --- Names: Keep one name for one value ---
+# Request: rename these private helpers' parameters and locals.
+# Context: the set holds the ids of products the shopper already reviewed.
+
+
+def _unreviewed(products, reviewed_product_ids):
+    return [p for p in products if p.product_id not in reviewed_product_ids]
+
+
+def _recommend(products, reviews):
+    reviewed_product_ids = {review.product_id for review in reviews}
+    return _unreviewed(products, reviewed_product_ids)
 
 
 # --- Names: Avoid generic names ---
