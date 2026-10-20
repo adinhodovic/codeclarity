@@ -9,7 +9,7 @@ license: MIT
 metadata:
   audience: software developers
   scope: code communication
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # Code Clarity
@@ -109,6 +109,20 @@ inflated claims with supported behavior; delete them when they add no informatio
 Delete recent-refactor narration from permanent comments. State the local constraint, not
 an unsupported comparison with related code. Keep any real warning, qualification, or
 domain term carried by the wording you remove.
+
+### Spell out terse idioms
+
+When refactoring is authorized, replace an idiom a reader has to decode, such as padding
+a list so an index past its end exists, with the plain conditional it stands for;
+otherwise suggest it. Keep the result for every input, including the short and empty
+cases the idiom was covering.
+
+### Apply one rule in one place
+
+When a function accepts one value in several shapes, convert every shape to a single
+form first, then apply the rule once, so the shapes cannot be treated differently.
+Restructure only when refactoring is authorized; otherwise report each place the rule
+is repeated.
 
 ### Code review comments
 
@@ -214,6 +228,8 @@ Verify claims about related code; a reference alone does not keep them accurate.
 rationale comes from a shared rule, document, or tracked migration, cite that source.
 Do not describe another layer's behavior from code that cannot see it, such as a UI's
 affordance in a backend comment; state what this layer provides.
+Describe an external system's format from its documentation: cite it, and say what it
+leaves undocumented. Do not state an inference about it as fact.
 
 #### Shared conventions
 
@@ -290,7 +306,8 @@ the requirement. Do not delete useful details for length alone.
 
 Add an example when it clarifies an input/output shape, unfamiliar API, or misuse risk
 better than prose. Do not add one just to make a docstring look complete. Keep it small
-and self-contained.
+and self-contained. For a function that parses or classifies text, give one example per
+input shape it handles, including a shape it rejects.
 
 ### Tests
 

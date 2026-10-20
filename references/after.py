@@ -70,6 +70,34 @@ def load_plugin(module_name):
     return __import__(module_name)  # nosec B403
 
 
+# --- Generic guidelines and gotchas: Spell out terse idioms ---
+
+
+def unit_of(measurement):
+    value, *rest = measurement.split(" ")
+    return rest[0] if rest else ""
+
+
+# --- Generic guidelines and gotchas: Apply one rule in one place ---
+
+
+def tag_entries(fields):
+    """Every tag the form sends, unstripped: split from "tags", or one per "tag.<n>"."""
+    entries = []
+    for key, value in fields.items():
+        if key == "tags":
+            entries.extend(value.split(","))
+        elif key.startswith("tag."):
+            entries.append(value)
+    return entries
+
+
+def public_tags(fields):
+    """The form's tags that aren't blank or marked private with a leading "!"."""
+    tags = [entry.strip() for entry in tag_entries(fields)]
+    return [tag for tag in tags if tag and not tag.startswith("!")]
+
+
 # --- Comments: Explain intent ---
 
 
@@ -172,6 +200,18 @@ def encode_token(payload):
 
 def decode_token(token):
     return bytes.fromhex(token)
+
+
+# Supplied: the vendor's API reference documents event keys as "<field>[<index>]". It does
+# not say whether a field with a single value is keyed with an index.
+
+
+def field_values(event, field):
+    # The vendor documents keys as "<field>[<index>]" but not whether a single value
+    # carries an index, so both are read.
+    if field in event:
+        return [event[field]]
+    return [value for key, value in event.items() if key.startswith(f"{field}[")]
 
 
 # --- Comments: Shared conventions ---
@@ -291,6 +331,25 @@ def group_pairs(pairs):
     for key, value in pairs:
         grouped.setdefault(key, []).append(value)
     return grouped
+
+
+# Request: review this docstring; callers pass sizes like "10px", "1.5em" and "auto".
+
+
+def parse_size(text):
+    """The size in ``text`` as (number, unit), or None when it has no number.
+
+    >>> parse_size("10px")
+    (10.0, 'px')
+    >>> parse_size("1.5em")
+    (1.5, 'em')
+    >>> parse_size("auto") is None
+    True
+    """
+    number = text.rstrip("abcdefghijklmnopqrstuvwxyz%")
+    if not number:
+        return None
+    return float(number), text[len(number):]
 
 
 # --- Tests: Let test names carry the scenario ---

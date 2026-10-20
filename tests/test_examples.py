@@ -51,6 +51,8 @@ class ExampleTests(unittest.TestCase):
     def test_documentation_edits_preserve_executable_code(self):
         authorized_code_changes = {
             "Comments: Replace a comment with a name",
+            "Generic guidelines and gotchas: Spell out terse idioms",
+            "Generic guidelines and gotchas: Apply one rule in one place",
             "Tests: Let test names carry the scenario",
             "Names: Name the behavior",
             "Names: Rename safely",
@@ -141,6 +143,37 @@ class ExampleTests(unittest.TestCase):
                     self.assertEqual(namespace["select_value"](record), "legacy")
             self.assertEqual(namespace["select_value"](
                 SimpleNamespace(override=None, default=0, legacy=[])), [])
+
+    def test_plain_idiom_keeps_every_result(self):
+        for measurement in ("10 px", "10", "", "10 px extra"):
+            with self.subTest(measurement=measurement):
+                self.assertEqual(
+                    self.namespaces["before"]["unit_of"](measurement),
+                    self.namespaces["after"]["unit_of"](measurement),
+                )
+
+    def test_one_rule_keeps_every_result(self):
+        forms = [
+            {"tags": "red, !secret, ,blue"},
+            {"tag.1": " green ", "tag.2": "!hidden", "tag.3": "  "},
+            {"tags": "a,b", "tag.1": "c", "other": "x"},
+            {},
+        ]
+        for fields in forms:
+            with self.subTest(fields=fields):
+                self.assertEqual(
+                    self.namespaces["before"]["public_tags"](fields),
+                    self.namespaces["after"]["public_tags"](fields),
+                )
+
+    def test_parser_examples_are_executable(self):
+        namespace = self.namespaces["after"]
+        test = doctest.DocTestParser().get_doctest(
+            namespace["parse_size"].__doc__, namespace, "parse_size", "after.py", 0
+        )
+        result = doctest.DocTestRunner(verbose=False).run(test)
+        self.assertEqual(result.failed, 0)
+        self.assertEqual(result.attempted, 3)
 
     def test_useful_example_is_executable(self):
         for name, namespace in self.namespaces.items():

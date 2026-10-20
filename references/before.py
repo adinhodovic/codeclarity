@@ -76,6 +76,34 @@ def load_plugin(module_name):
     return __import__(module_name)  # nosec B403
 
 
+# --- Generic guidelines and gotchas: Spell out terse idioms ---
+# Request: make this easier to read; preserve behavior.
+
+
+def unit_of(measurement):
+    value, *rest = measurement.split(" ")
+    return (rest + [""])[0]
+
+
+# --- Generic guidelines and gotchas: Apply one rule in one place ---
+# Request: make this easier to follow; preserve behavior. A form sends its tags either
+# comma-separated in "tags" or one per "tag.<n>" key.
+
+
+def public_tags(fields):
+    """The form's tags that aren't blank or marked private with a leading "!"."""
+    tags = []
+    for key, value in fields.items():
+        if key == "tags":
+            for tag in value.split(","):
+                if tag.strip() and not tag.strip().startswith("!"):
+                    tags.append(tag.strip())
+        elif key.startswith("tag."):
+            if value.strip() and not value.strip().startswith("!"):
+                tags.append(value.strip())
+    return tags
+
+
 # --- Comments: Explain intent ---
 # Supplied context: event IDs are unique; callers replay the returned events in order.
 
@@ -194,6 +222,17 @@ def decode_token(token):
     return bytes.fromhex(token)
 
 
+# Supplied: the vendor's API reference documents event keys as "<field>[<index>]". It does
+# not say whether a field with a single value is keyed with an index.
+
+
+def field_values(event, field):
+    # The vendor indexes every repeated field and never indexes a single value.
+    if field in event:
+        return [event[field]]
+    return [value for key, value in event.items() if key.startswith(f"{field}[")]
+
+
 # --- Comments: Shared conventions ---
 
 
@@ -309,6 +348,17 @@ def group_pairs(pairs):
     for key, value in pairs:
         grouped.setdefault(key, []).append(value)
     return grouped
+
+
+# Request: review this docstring; callers pass sizes like "10px", "1.5em" and "auto".
+
+
+def parse_size(text):
+    """The size in ``text`` as (number, unit), or None when it has no number."""
+    number = text.rstrip("abcdefghijklmnopqrstuvwxyz%")
+    if not number:
+        return None
+    return float(number), text[len(number):]
 
 
 # --- Tests: Let test names carry the scenario ---
